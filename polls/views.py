@@ -1,3 +1,4 @@
+from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.serializers import ValidationError
@@ -59,7 +60,10 @@ class PollsViewSet(viewsets.ModelViewSet):
 
   @action(detail=True, methods=['get'])
   def questions(self, request, pk=None):
-    poll = self.get_object()
+    try:
+      poll = self.get_object()
+    except Poll.DoesNotExist:
+      raise Http404
     serializer = self.get_serializer(poll.questions.all(), many=True)
     return Response(serializer.data)
 
