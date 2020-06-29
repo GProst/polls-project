@@ -3,8 +3,8 @@ from rest_framework import serializers
 from ..models import Question
 
 class SubmittedPollSerializer(serializers.BaseSerializer):
-  @staticmethod
-  def get_question_representation(question, user_id):
+  @classmethod
+  def get_question_representation(cls, question, user_id):
     result = {
       'id': question.id,
       'text': question.text,
@@ -13,7 +13,7 @@ class SubmittedPollSerializer(serializers.BaseSerializer):
         'id': choice.id,
         'text': choice.text
       } for choice in question.choices.all()],
-      **SubmittedPollSerializer.get_answer_representation(question, user_id)
+      **cls.get_answer_representation(question, user_id)
     }
     if question.type == Question.TEXT_TYPE:
       del result['choices']
