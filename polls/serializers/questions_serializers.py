@@ -9,7 +9,7 @@ class ReadCreateQuestionsSerializer(serializers.ModelSerializer):
   class Meta:
     model = Question
     fields = ['id', 'text', 'type', 'choices', 'poll']
-    read_only_fields = ['id']
+    read_only_fields = ['id', 'poll']
 
   def validate(self, data):
     if (not data.get('choices', None) or len(data['choices']) < 2) and data.get('type', Question.TEXT_TYPE) != Question.TEXT_TYPE:
@@ -19,10 +19,11 @@ class ReadCreateQuestionsSerializer(serializers.ModelSerializer):
     return data
 
   def create(self, validated_data):
+    poll = self.context['poll']
     choices_data = None
     if 'choices' in validated_data:
       choices_data = validated_data.pop('choices')
-    question = Question.objects.create(**validated_data)
+    question = poll.questions.create(**validated_data)
     if validated_data.get('type', Question.TEXT_TYPE) != Question.TEXT_TYPE:
       for choice_data in choices_data:
         Choice.objects.create(question=question, **choice_data)

@@ -27,7 +27,9 @@ class PollsViewSet(viewsets.ModelViewSet):
 
   create_questions: Create a poll's question
 
-  submit: Submit a poll on behalf of a user (only for active polls)
+  submit: Submit a poll on behalf of a user (only for active polls).
+  If question is a single choice than an answers field should be a choice ID.
+  If question is a multiple choice than an answers field should be a choice IDs separated by a comma.
   """
   permission_classes = [IsAdminUser]
   queryset = Poll.objects.all()
@@ -57,7 +59,8 @@ class PollsViewSet(viewsets.ModelViewSet):
 
   @questions.mapping.post
   def create_questions(self, request, pk=None):
-    serializer = self.get_serializer(data={**request.data, "poll": pk})
+    serializer_class = self.get_serializer_class()
+    serializer = serializer_class(data=request.data, context={'poll': Poll.objects.get(pk=pk)})
     if serializer.is_valid():
       serializer.save()
       return Response(serializer.data)
@@ -66,7 +69,7 @@ class PollsViewSet(viewsets.ModelViewSet):
 
   @action(detail=True, methods=['post'], permission_classes=[AllowAny])
   def submit(self, request, pk=None):
-    serializer = self.get_serializer(data={**request.data, 'user_id': request.query_params['user_id'], 'poll': pk})
+    serializer = self.get_serializer(data={**request.data, 'poll': pk})
     if serializer.is_valid():
       serializer.save()
       return Response("successfully submitted")
