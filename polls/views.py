@@ -64,16 +64,17 @@ class PollsViewSet(viewsets.ModelViewSet):
       poll = self.get_object()
     except Poll.DoesNotExist:
       raise Http404
-    serializer = self.get_serializer(poll.questions.all(), many=True)
+    serializer_class = self.get_serializer_class()
+    serializer = serializer_class(poll.questions.all(), many=True, context={'poll': poll})
     return Response(serializer.data)
 
   @questions.mapping.post
   def create_questions(self, request, pk=None):
-    serializer_class = self.get_serializer_class()
     try:
       poll = self.get_object()
     except Poll.DoesNotExist:
       raise Http404
+    serializer_class = self.get_serializer_class()
     serializer = serializer_class(data=request.data, context={'poll': poll})
     if serializer.is_valid():
       serializer.save()

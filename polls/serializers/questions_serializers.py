@@ -15,6 +15,9 @@ class ReadCreateQuestionsSerializer(serializers.ModelSerializer):
     data = super(ReadCreateQuestionsSerializer, self).to_representation(question)
     if question.type == Question.TEXT_TYPE:
       data.pop('choices', None)
+    # If we request question in a context of a poll then no need to include poll ID here:
+    if self.context.get('poll', None):
+      data.pop('poll', None)
     return data
 
   def validate(self, data):
