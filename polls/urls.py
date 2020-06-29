@@ -5,7 +5,8 @@ from django.urls import path
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
-router.register(r'', views.PollsViewSet)
+router.register(r'polls', views.PollsViewSet)
+router.register(r'questions', views.QuestionsViewSet)
 
 urlpatterns = [
   path('', include(router.urls)),

@@ -37,7 +37,8 @@ INSTALLED_APPS = [
   'django.contrib.messages',
   'django.contrib.staticfiles',
   'rest_framework',
-  'rest_framework.authtoken'
+  'rest_framework.authtoken',
+  'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -120,4 +121,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication'
     ]
+}
+
+SWAGGER_SETTINGS = {
+  'SECURITY_DEFINITIONS': {
+    'api_key': {
+      'type': 'apiKey',
+      'in': 'header',
+      'name': 'Authorization'
+    }
+  },
 }
