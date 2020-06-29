@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import viewsets, status
+from rest_framework.serializers import ValidationError
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, AllowAny
 
@@ -25,6 +26,8 @@ class PollsViewSet(viewsets.ModelViewSet):
   questions: Get poll's questions
 
   create_questions: Create a poll's question
+
+  submit: Submit a poll on behalf of a user (only for active polls)
   """
   permission_classes = [IsAdminUser]
   queryset = Poll.objects.all()
@@ -36,6 +39,8 @@ class PollsViewSet(viewsets.ModelViewSet):
       return serializers.UpdatePollsSerializer
     if self.action in ['create_questions', 'questions']:
       return serializers.ReadCreateQuestionsSerializer
+    if self.action == 'submit':
+      return serializers.SubmitPollsSerializer
     return
 
   @action(detail=False, permission_classes=[AllowAny])
@@ -52,12 +57,19 @@ class PollsViewSet(viewsets.ModelViewSet):
 
   @questions.mapping.post
   def create_questions(self, request, pk=None):
-    poll = self.get_object()
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid()
+    serializer = self.get_serializer(data={**request.data, "poll": pk})
     if serializer.is_valid():
-      question = poll.questions.create(**serializer.data)
-      return Response(self.get_serializer(question).data)
+      serializer.save()
+      return Response(serializer.data)
+    else:
+      return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+  @action(detail=True, methods=['post'], permission_classes=[AllowAny])
+  def submit(self, request, pk=None):
+    serializer = self.get_serializer(data={**request.data, 'user_id': request.query_params['user_id'], 'poll': pk})
+    if serializer.is_valid():
+      serializer.save()
+      return Response("successfully submitted")
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -84,3 +96,9 @@ class QuestionsViewSet(viewsets.ModelViewSet):
     if self.action in ['update', 'partial_update']:
       return serializers.UpdateQuestionsSerializer
     return
+
+  # Don't delete the last question of the Poll, there should always be at least 1:
+  def perform_destroy(self, instance):
+    if instance.poll.questions.count() == 1:
+      raise ValidationError({'questions': "Can't delete the last question"})
+    instance.delete()

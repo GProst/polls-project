@@ -26,3 +26,14 @@ class Question(models.Model):
   text = models.CharField(max_length=255)
   type = models.CharField(max_length=255, choices=QUESTION_TYPES, default=TEXT_TYPE)
   poll = models.ForeignKey(Poll, related_name='questions', on_delete=models.CASCADE)
+
+
+class Choice(models.Model):
+  text = models.CharField(max_length=255)
+  question = models.ForeignKey(Question, related_name='choices', on_delete=models.CASCADE)
+
+
+class Answer(models.Model):
+  answer = models.TextField()
+  question = models.ForeignKey(Question, related_name='answers', on_delete=models.CASCADE)
+  user_id = models.IntegerField()
