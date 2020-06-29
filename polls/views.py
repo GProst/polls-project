@@ -3,6 +3,8 @@ from rest_framework import viewsets, status
 from rest_framework.serializers import ValidationError
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, AllowAny
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from .models import Poll, Question
 from . import serializers
@@ -30,6 +32,8 @@ class PollsViewSet(viewsets.ModelViewSet):
   submit: Submit a poll on behalf of a user (only for active polls).
   If question is a single choice than an answers field should be a choice ID.
   If question is a multiple choice than an answers field should be a choice IDs separated by a comma.
+
+  submitted: Get details about submitted polls by user_id
   """
   permission_classes = [IsAdminUser]
   queryset = Poll.objects.all()
@@ -43,6 +47,8 @@ class PollsViewSet(viewsets.ModelViewSet):
       return serializers.ReadCreateQuestionsSerializer
     if self.action == 'submit':
       return serializers.SubmitPollsSerializer
+    if self.action == 'submitted':
+      return serializers.SubmittedPollSerializer
     return
 
   @action(detail=False, permission_classes=[AllowAny])
@@ -75,6 +81,17 @@ class PollsViewSet(viewsets.ModelViewSet):
       return Response("successfully submitted")
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+  @swagger_auto_schema(manual_parameters=[
+    openapi.Parameter('user_id', openapi.IN_QUERY, description="User ID", type=openapi.TYPE_INTEGER)
+  ])
+  @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+  def submitted(self, request):
+    user_id = request.query_params.get('user_id', None)
+    if not user_id:
+      raise ValidationError("user_id is required query param")
+    submitted_polls = Poll.objects.filter(questions__answers__user_id=user_id).distinct()
+    return Response(self.get_serializer(submitted_polls, many=True).data)
 
 
 class QuestionsViewSet(viewsets.ModelViewSet):
