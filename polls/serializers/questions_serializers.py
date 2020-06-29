@@ -11,6 +11,12 @@ class ReadCreateQuestionsSerializer(serializers.ModelSerializer):
     fields = ['id', 'text', 'type', 'choices', 'poll']
     read_only_fields = ['id', 'poll']
 
+  def to_representation(self, question):
+    data = super(ReadCreateQuestionsSerializer, self).to_representation(question)
+    if question.type == Question.TEXT_TYPE:
+      data.pop('choices', None)
+    return data
+
   def validate(self, data):
     if (not data.get('choices', None) or len(data['choices']) < 2) and data.get('type', Question.TEXT_TYPE) != Question.TEXT_TYPE:
       raise serializers.ValidationError({
