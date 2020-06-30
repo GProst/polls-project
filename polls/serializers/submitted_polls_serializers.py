@@ -30,7 +30,7 @@ class SubmittedPollSerializer(serializers.BaseSerializer):
       return {'selected_choices': [int(a) for a in answer.split(',')]}
 
   def to_representation(self, poll):
-    user_id = self.context['view'].request.query_params['user_id']
+    user_id = self.context['user_id']
     return {
       'id': poll.id,
       'title': poll.title,

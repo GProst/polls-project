@@ -84,10 +84,11 @@ class PollsViewSet(viewsets.ModelViewSet):
 
   @action(detail=True, methods=['post'], permission_classes=[AllowAny])
   def submit(self, request, pk=None):
-    serializer = self.get_serializer(data={**request.data, 'poll': pk})
+    serializer = self.get_serializer(data=request.data)
     if serializer.is_valid():
       serializer.save()
-      return Response("successfully submitted")
+      user_id = request.data['user_id']
+      return Response(serializers.SubmittedPollSerializer(self.get_object(), context={'user_id': user_id}).data)
     else:
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -100,7 +101,7 @@ class PollsViewSet(viewsets.ModelViewSet):
     if not user_id:
       raise ValidationError("user_id is required query param")
     submitted_polls = Poll.objects.filter(questions__answers__user_id=user_id).distinct()
-    return Response(self.get_serializer(submitted_polls, many=True).data)
+    return Response(self.get_serializer_class()(submitted_polls, many=True, context={'user_id': user_id}).data)
 
 
 class QuestionsViewSet(viewsets.ModelViewSet):
