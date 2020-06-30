@@ -12,7 +12,7 @@ class ReadCreateQuestionsSerializer(serializers.ModelSerializer):
     read_only_fields = ['id', 'poll']
 
   def to_representation(self, question):
-    data = super(ReadCreateQuestionsSerializer, self).to_representation(question)
+    data = super().to_representation(question)
     if question.type == Question.TEXT_TYPE:
       data.pop('choices', None)
     # If we request question in a context of a poll then no need to include poll ID here:
