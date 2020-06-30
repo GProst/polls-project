@@ -16,7 +16,7 @@ class ReadCreateQuestionsSerializer(serializers.ModelSerializer):
     if question.type == Question.TEXT_TYPE:
       data.pop('choices', None)
     # If we request question in a context of a poll then no need to include poll ID here:
-    if self.context.get('poll', None):
+    if self.context.get('poll', None) or self.context.get('within_polls_serializer', False):
       data.pop('poll', None)
     return data
 

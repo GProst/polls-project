@@ -18,6 +18,10 @@ class ValidateEndDateMixin(object):
 class ReadCreatePollsSerializer(serializers.ModelSerializer):
   questions = ReadCreateQuestionsSerializer(many=True, required=True)
 
+  def __init__(self, *args, **kwargs):
+    kwargs['context']['within_polls_serializer'] = True
+    super().__init__(*args, **kwargs)
+
   class Meta:
     model = Poll
     fields = ['id', 'title', 'description', 'start_date', 'end_date', 'questions']
